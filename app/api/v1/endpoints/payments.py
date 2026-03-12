@@ -319,3 +319,8 @@ async def get_payment_by_order(
         )
     
     return payment
+
+@router.get("/payment-return")
+async def payment_return(request: Request):
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="acrehq://payment-return")

@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     PAYNOW_RESULT_URL: str = ""
     
     # Platform settings
-    PLATFORM_COMMISSION_RATE: float = 0.15  # 15%
+    PLATFORM_COMMISSION_RATE: float = 0.05  # 15%
     MINIMUM_ORDER_AMOUNT: float = 5.0
     DELIVERY_FEE: float = 2.0
     

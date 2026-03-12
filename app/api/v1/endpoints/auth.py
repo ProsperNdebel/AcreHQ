@@ -34,10 +34,9 @@ async def signup(user_data: UserSignup, db: Session = Depends(get_db)):
         )
     
     otp_code = generate_otp()
-    print(f'this is the phone numner: {user_data}')
+ 
     # Override OTP for test accounts
     if user_data.phone_number in TEST_ACCOUNTS:
-        print('we are in here Prosper no need')
         otp_code = TEST_ACCOUNTS[user_data.phone_number]
 
     otp_storage[user_data.phone_number] = {
