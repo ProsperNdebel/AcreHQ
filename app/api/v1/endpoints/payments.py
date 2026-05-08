@@ -11,20 +11,13 @@ from app.models.order import Order
 from app.models.user import User
 from app.api.deps import get_current_customer
 from app.core.config import settings
+from app.services.sms_service import sms_service
 
 router = APIRouter()
 
 # Mock mode detection
 MOCK_MODE = settings.PAYNOW_INTEGRATION_ID == "12345"
 
-# Initialize Paynow (only if not in mock mode)
-# if not MOCK_MODE:
-#     paynow = Paynow(
-#         settings.PAYNOW_INTEGRATION_ID,
-#         settings.PAYNOW_INTEGRATION_KEY,
-#         settings.PAYNOW_RESULT_URL,
-#         settings.PAYNOW_RETURN_URL
-#     )
 
 @router.post("/initiate", response_model=PaymentResponse)
 async def initiate_payment(
@@ -217,6 +210,17 @@ async def payment_webhook(
         order = payment.order
         if order:
             order.status = "accepted"
+            
+            # Notify farmer now that payment is confirmed
+            farmer = order.listing.farmer if order.listing else None
+            if farmer and farmer.phone_number:
+                await sms_service.notify_order_placed(
+                    farmer_phone=farmer.phone_number,
+                    crop_name=order.listing.crop_name,
+                    quantity=order.quantity,
+                    unit=order.listing.unit
+                )
+
     elif status_str.lower() in ["cancelled", "failed"]:
         payment.status = PaymentStatus.FAILED
     
@@ -255,6 +259,16 @@ async def mock_confirm_payment(
     order = payment.order
     if order:
         order.status = "accepted"
+
+        # Notify farmer now that payment is confirmed
+        farmer = order.listing.farmer if order.listing else None
+        if farmer and farmer.phone_number:
+            await sms_service.notify_order_placed(
+                farmer_phone=farmer.phone_number,
+                crop_name=order.listing.crop_name,
+                quantity=order.quantity,
+                unit=order.listing.unit
+            )
     
     db.commit()
     db.refresh(payment)
